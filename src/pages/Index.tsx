@@ -1,7 +1,8 @@
-import { WalletConnect } from '@/components/web3/WalletConnect';
+import { WalletConnect } from '@/components/solana/WalletConnect';
 import { PriceChart } from '@/components/trading/PriceChart';
-import { SwapInterface } from '@/components/trading/SwapInterface';
-import { PortfolioCard } from '@/components/trading/PortfolioCard';
+import { SolanaSwap } from '@/components/trading/SolanaSwap';
+import { SolanaPortfolio } from '@/components/trading/SolanaPortfolio';
+import { TokenLookup } from '@/components/trading/TokenLookup';
 import { Activity } from 'lucide-react';
 
 const Index = () => {
@@ -32,8 +33,9 @@ const Index = () => {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             <WalletConnect />
-            <SwapInterface />
-            <PortfolioCard />
+            <TokenLookup />
+            <SolanaSwap />
+            <SolanaPortfolio />
           </div>
 
           {/* Right Column */}
@@ -46,7 +48,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t border-border mt-16 py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>Powered by Web3 Technology</p>
+          <p>Powered by Solana Blockchain</p>
         </div>
       </footer>
     </div>

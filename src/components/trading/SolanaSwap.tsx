@@ -5,20 +5,28 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ArrowDownUp } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { useAccount } from 'wagmi';
+import { useWallet } from '@solana/wallet-adapter-react';
 
-export const SwapInterface = () => {
-  const { isConnected } = useAccount();
+const SOLANA_TOKENS = [
+  { symbol: 'SOL', name: 'Solana', decimals: 9 },
+  { symbol: 'USDC', name: 'USD Coin', decimals: 6 },
+  { symbol: 'USDT', name: 'Tether', decimals: 6 },
+  { symbol: 'RAY', name: 'Raydium', decimals: 6 },
+  { symbol: 'SRM', name: 'Serum', decimals: 6 },
+];
+
+export const SolanaSwap = () => {
+  const { publicKey } = useWallet();
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
-  const [fromToken, setFromToken] = useState('ETH');
+  const [fromToken, setFromToken] = useState('SOL');
   const [toToken, setToToken] = useState('USDC');
 
   const handleSwap = () => {
-    if (!isConnected) {
+    if (!publicKey) {
       toast({
         title: 'Wallet Not Connected',
-        description: 'Please connect your wallet to swap tokens',
+        description: 'Please connect your Solana wallet to swap tokens',
         variant: 'destructive',
       });
       return;
@@ -65,10 +73,11 @@ export const SwapInterface = () => {
               onChange={(e) => setFromToken(e.target.value)}
               className="px-4 py-2 rounded-md bg-background border border-border text-foreground"
             >
-              <option value="ETH">ETH</option>
-              <option value="USDC">USDC</option>
-              <option value="DAI">DAI</option>
-              <option value="WBTC">WBTC</option>
+              {SOLANA_TOKENS.map((token) => (
+                <option key={token.symbol} value={token.symbol}>
+                  {token.symbol}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -99,10 +108,11 @@ export const SwapInterface = () => {
               onChange={(e) => setToToken(e.target.value)}
               className="px-4 py-2 rounded-md bg-background border border-border text-foreground"
             >
-              <option value="USDC">USDC</option>
-              <option value="ETH">ETH</option>
-              <option value="DAI">DAI</option>
-              <option value="WBTC">WBTC</option>
+              {SOLANA_TOKENS.map((token) => (
+                <option key={token.symbol} value={token.symbol}>
+                  {token.symbol}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -110,20 +120,20 @@ export const SwapInterface = () => {
         <Button
           onClick={handleSwap}
           className="w-full bg-gradient-primary hover:opacity-90"
-          disabled={!isConnected}
+          disabled={!publicKey}
         >
-          {isConnected ? 'Swap Tokens' : 'Connect Wallet to Swap'}
+          {publicKey ? 'Swap Tokens' : 'Connect Wallet to Swap'}
         </Button>
 
         {fromAmount && (
           <div className="text-sm text-muted-foreground space-y-1">
             <div className="flex justify-between">
               <span>Exchange Rate:</span>
-              <span>1 {fromToken} ≈ 2,500 {toToken}</span>
+              <span>1 {fromToken} ≈ 150 {toToken}</span>
             </div>
             <div className="flex justify-between">
               <span>Network Fee:</span>
-              <span>~$5.00</span>
+              <span>~0.000005 SOL</span>
             </div>
           </div>
         )}

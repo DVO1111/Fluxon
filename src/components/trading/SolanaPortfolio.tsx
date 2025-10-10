@@ -1,14 +1,23 @@
 import { Card } from '@/components/ui/card';
 import { TrendingUp, Wallet, DollarSign } from 'lucide-react';
-import { useAccount, useBalance } from 'wagmi';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { useEffect, useState } from 'react';
 
-export const PortfolioCard = () => {
-  const { address, isConnected } = useAccount();
-  const { data: balance } = useBalance({
-    address: address,
-  });
+export const SolanaPortfolio = () => {
+  const { publicKey } = useWallet();
+  const { connection } = useConnection();
+  const [balance, setBalance] = useState(0);
 
-  if (!isConnected) {
+  useEffect(() => {
+    if (publicKey) {
+      connection.getBalance(publicKey).then((bal) => {
+        setBalance(bal / LAMPORTS_PER_SOL);
+      });
+    }
+  }, [publicKey, connection]);
+
+  if (!publicKey) {
     return (
       <Card className="p-6 bg-gradient-card border-primary/20">
         <div className="text-center py-8">
@@ -19,7 +28,7 @@ export const PortfolioCard = () => {
     );
   }
 
-  const totalValue = balance ? parseFloat(balance.formatted) * 2500 : 0;
+  const totalValue = balance * 150; // Approximate SOL price
 
   return (
     <Card className="p-6 bg-gradient-card border-primary/20">
@@ -43,14 +52,14 @@ export const PortfolioCard = () => {
         <div className="space-y-3">
           <div className="flex justify-between items-center p-3 rounded-lg bg-card/50 border border-border">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20" />
+              <div className="w-8 h-8 rounded-full bg-gradient-primary" />
               <div>
-                <p className="font-semibold">ETH</p>
-                <p className="text-sm text-muted-foreground">Ethereum</p>
+                <p className="font-semibold">SOL</p>
+                <p className="text-sm text-muted-foreground">Solana</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="font-semibold">{balance?.formatted.slice(0, 6)}</p>
+              <p className="font-semibold">{balance.toFixed(4)}</p>
               <p className="text-sm text-success">+5.2%</p>
             </div>
           </div>
