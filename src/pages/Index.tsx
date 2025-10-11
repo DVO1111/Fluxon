@@ -4,7 +4,7 @@ import { PriceChart } from '@/components/trading/PriceChart';
 import { SolanaSwap } from '@/components/trading/SolanaSwap';
 import { SolanaPortfolio } from '@/components/trading/SolanaPortfolio';
 import { TokenLookup } from '@/components/trading/TokenLookup';
-import { UserProfile } from '@/components/solana/UserProfile';
+import { WalletBalance } from '@/components/solana/WalletBalance';
 import { Activity } from 'lucide-react';
 import fluxonLogo from '@/assets/fluxon-logo.png';
 
@@ -42,7 +42,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            <UserProfile />
+            <WalletBalance />
             <TokenLookup onTokenSelect={handleTokenSelect} />
             <SolanaSwap preselectedToken={selectedToken} />
             <SolanaPortfolio />
@@ -50,7 +50,6 @@ const Index = () => {
 
           {/* Right Column */}
           <div className="space-y-6">
-            <WalletConnect />
             <PriceChart />
           </div>
         </div>

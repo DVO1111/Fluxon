@@ -1,41 +1,35 @@
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useUserBalance } from '@/hooks/useUserBalance';
-import { useNavigate } from 'react-router-dom';
-import { Wallet, LogOut } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useWalletBalance } from '@/hooks/useWalletBalance';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { Wallet } from 'lucide-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
-export const UserProfile = () => {
-  const { balance, loading } = useUserBalance();
-  const navigate = useNavigate();
+export const WalletBalance = () => {
+  const { balance, loading } = useWalletBalance();
+  const { connected } = useWallet();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: 'Logged Out',
-      description: 'You have been logged out successfully',
-    });
-    navigate('/auth');
-  };
-
-  if (!balance) {
+  if (!connected) {
     return (
       <Card className="p-6 bg-gradient-card border-primary/20">
         <div className="text-center space-y-4">
           <Wallet className="w-12 h-12 mx-auto text-muted-foreground" />
           <div>
-            <h3 className="text-lg font-semibold mb-2">Demo Trading Account</h3>
+            <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Log in to receive 100,000 USDT and start trading
+              Connect your Solana wallet to receive 100,000 USDT and start trading
             </p>
-            <Button
-              onClick={() => navigate('/auth')}
-              className="bg-gradient-primary hover:opacity-90"
-            >
-              Sign In / Sign Up
-            </Button>
+            <WalletMultiButton className="!bg-gradient-primary hover:!opacity-90" />
           </div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (loading || !balance) {
+    return (
+      <Card className="p-6 bg-gradient-card border-primary/20">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading balance...</p>
         </div>
       </Card>
     );
@@ -49,15 +43,6 @@ export const UserProfile = () => {
             <Wallet className="w-5 h-5 text-primary" />
             Demo Balance
           </h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
         </div>
 
         <div className="space-y-3">

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { ArrowDownUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useUserBalance } from '@/hooks/useUserBalance';
+import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { TradeChart } from './TradeChart';
 
 const SOLANA_TOKENS = [
@@ -37,7 +37,7 @@ interface SolanaSwapProps {
 
 export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const { publicKey } = useWallet();
-  const { balance, updateBalance } = useUserBalance();
+  const { balance, updateBalance } = useWalletBalance();
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
   const [fromToken, setFromToken] = useState(preselectedToken?.symbol || 'USDT');
@@ -57,10 +57,19 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   }, [fromAmount, fromToken, toToken]);
 
   const handleSwap = async () => {
+    if (!publicKey) {
+      toast({
+        title: 'Wallet Not Connected',
+        description: 'Please connect your wallet to start trading',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!balance) {
       toast({
-        title: 'Not Logged In',
-        description: 'Please log in to start trading',
+        title: 'Loading',
+        description: 'Please wait while we load your balance',
         variant: 'destructive',
       });
       return;
@@ -212,9 +221,9 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
         <Button
           onClick={handleSwap}
           className="w-full bg-gradient-primary hover:opacity-90"
-          disabled={!balance}
+          disabled={!publicKey || !balance}
         >
-          {balance ? 'Swap Tokens' : 'Log In to Swap'}
+          {publicKey && balance ? 'Swap Tokens' : 'Connect Wallet to Swap'}
         </Button>
 
         {fromAmount && (
