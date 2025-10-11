@@ -1,11 +1,23 @@
+import { useState } from 'react';
 import { WalletConnect } from '@/components/solana/WalletConnect';
 import { PriceChart } from '@/components/trading/PriceChart';
 import { SolanaSwap } from '@/components/trading/SolanaSwap';
 import { SolanaPortfolio } from '@/components/trading/SolanaPortfolio';
 import { TokenLookup } from '@/components/trading/TokenLookup';
+import { UserProfile } from '@/components/solana/UserProfile';
 import { Activity } from 'lucide-react';
+import fluxonLogo from '@/assets/fluxon-logo.png';
 
 const Index = () => {
+  const [selectedToken, setSelectedToken] = useState<{
+    address: string;
+    symbol: string;
+    name: string;
+  } | undefined>(undefined);
+
+  const handleTokenSelect = (token: { address: string; symbol: string; name: string }) => {
+    setSelectedToken(token);
+  };
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -13,14 +25,12 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center animate-pulse-glow">
-                <Activity className="w-6 h-6 text-primary-foreground" />
-              </div>
+              <img src={fluxonLogo} alt="Fluxon" className="w-10 h-10 rounded-lg animate-pulse-glow" />
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  D-Trade
+                  Fluxon
                 </h1>
-                <p className="text-sm text-muted-foreground">Decentralized Trading Platform</p>
+                <p className="text-sm text-muted-foreground">Solana Trading Platform</p>
               </div>
             </div>
           </div>
@@ -32,14 +42,15 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            <WalletConnect />
-            <TokenLookup />
-            <SolanaSwap />
+            <UserProfile />
+            <TokenLookup onTokenSelect={handleTokenSelect} />
+            <SolanaSwap preselectedToken={selectedToken} />
             <SolanaPortfolio />
           </div>
 
           {/* Right Column */}
           <div className="space-y-6">
+            <WalletConnect />
             <PriceChart />
           </div>
         </div>
