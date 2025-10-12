@@ -1,14 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { WalletConnect } from '@/components/solana/WalletConnect';
 import { PriceChart } from '@/components/trading/PriceChart';
 import { SolanaSwap } from '@/components/trading/SolanaSwap';
 import { SolanaPortfolio } from '@/components/trading/SolanaPortfolio';
 import { TokenLookup } from '@/components/trading/TokenLookup';
 import { WalletBalance } from '@/components/solana/WalletBalance';
-import { Activity } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { History } from 'lucide-react';
 import fluxonLogo from '@/assets/fluxon-logo.png';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [selectedToken, setSelectedToken] = useState<{
     address: string;
     symbol: string;
@@ -33,6 +36,14 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Solana Trading Platform</p>
               </div>
             </div>
+            <Button
+              onClick={() => navigate('/history')}
+              variant="outline"
+              className="gap-2"
+            >
+              <History className="w-4 h-4" />
+              Trade History
+            </Button>
           </div>
         </div>
       </header>

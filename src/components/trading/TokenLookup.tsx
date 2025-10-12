@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Search, ExternalLink, TrendingUp } from 'lucide-react';
+import { Search, ExternalLink, TrendingUp, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface TokenLookupProps {
@@ -12,31 +12,68 @@ interface TokenLookupProps {
 
 export const TokenLookup = ({ onTokenSelect }: TokenLookupProps) => {
   const [contractAddress, setContractAddress] = useState('');
-  const [tokenInfo, setTokenInfo] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [tokenInfo, setTokenInfo] = useState<{
+    address: string;
+    name: string;
+    symbol: string;
+    price: number;
+    priceChange24h: number;
+  } | null>(null);
 
-  const handleLookup = () => {
+  const handleLookup = async () => {
     if (!contractAddress.trim()) {
       toast({
-        title: 'Invalid Address',
-        description: 'Please enter a valid contract address',
+        title: 'Invalid Input',
+        description: 'Please enter a contract address',
         variant: 'destructive',
       });
       return;
     }
 
-    // Mock token info - in production, fetch from DEX Screener API
-    const mockTokenInfo = {
-      address: contractAddress,
-      symbol: 'TOKEN',
-      name: 'Custom Token',
-    };
-    
-    setTokenInfo(mockTokenInfo);
-    
-    toast({
-      title: 'Token Found',
-      description: 'You can now trade this token below',
-    });
+    setLoading(true);
+
+    try {
+      // Fetch real token data from DexScreener
+      const response = await fetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${contractAddress}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch token data');
+      }
+
+      const data = await response.json();
+      const pair = data.pairs?.[0];
+
+      if (!pair) {
+        throw new Error('Token not found');
+      }
+
+      const tokenData = {
+        address: contractAddress,
+        name: pair.baseToken.name,
+        symbol: pair.baseToken.symbol,
+        price: parseFloat(pair.priceUsd || '0'),
+        priceChange24h: parseFloat(pair.priceChange?.h24 || '0'),
+      };
+
+      setTokenInfo(tokenData);
+
+      toast({
+        title: 'Token Found',
+        description: `Found ${tokenData.name} (${tokenData.symbol})`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Lookup Failed',
+        description: 'Could not find token with this address on DexScreener',
+        variant: 'destructive',
+      });
+      setTokenInfo(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTrade = () => {
@@ -83,9 +120,19 @@ export const TokenLookup = ({ onTokenSelect }: TokenLookupProps) => {
           <Button
             onClick={handleLookup}
             className="bg-gradient-primary hover:opacity-90"
+            disabled={loading}
           >
-            <Search className="w-4 h-4 mr-2" />
-            Find Token
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Searching...
+              </>
+            ) : (
+              <>
+                <Search className="w-4 h-4 mr-2" />
+                Find Token
+              </>
+            )}
           </Button>
           <Button
             onClick={handleViewOnDex}
@@ -98,18 +145,28 @@ export const TokenLookup = ({ onTokenSelect }: TokenLookupProps) => {
         </div>
 
         {tokenInfo && (
-          <div className="mt-4 p-4 bg-primary/10 rounded-lg border border-primary/20 space-y-3">
-            <div>
-              <p className="text-xs text-muted-foreground">Token Name</p>
-              <p className="font-semibold">{tokenInfo.name}</p>
+          <div className="mt-4 p-4 bg-primary/5 rounded-lg space-y-2 border border-primary/20">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Name:</span>
+              <span className="font-semibold">{tokenInfo.name}</span>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Symbol</p>
-              <p className="font-semibold">{tokenInfo.symbol}</p>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Symbol:</span>
+              <span className="font-semibold">{tokenInfo.symbol}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Price:</span>
+              <span className="font-semibold">${tokenInfo.price.toFixed(6)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">24h Change:</span>
+              <span className={`font-semibold ${tokenInfo.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {tokenInfo.priceChange24h >= 0 ? '+' : ''}{tokenInfo.priceChange24h.toFixed(2)}%
+              </span>
             </div>
             <Button
               onClick={handleTrade}
-              className="w-full bg-gradient-primary hover:opacity-90"
+              className="w-full bg-gradient-primary hover:opacity-90 mt-2"
             >
               <TrendingUp className="w-4 h-4 mr-2" />
               Trade This Token

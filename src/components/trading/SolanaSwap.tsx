@@ -8,6 +8,9 @@ import { toast } from '@/hooks/use-toast';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { TradeChart } from './TradeChart';
+import { Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
+import { supabase } from '@/integrations/supabase/client';
+import { endpoint } from '@/lib/solana/config';
 
 const SOLANA_TOKENS = [
   { symbol: 'SOL', name: 'Solana', decimals: 9 },
@@ -36,7 +39,7 @@ interface SolanaSwapProps {
 }
 
 export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
-  const { publicKey } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const { balance, updateBalance } = useWalletBalance();
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
@@ -44,6 +47,7 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const [toToken, setToToken] = useState('SOL');
   const [showChart, setShowChart] = useState(false);
   const [lastTrade, setLastTrade] = useState<any>(null);
+  const [isSwapping, setIsSwapping] = useState(false);
 
   // Auto-calculate toAmount when fromAmount changes
   useEffect(() => {
@@ -57,7 +61,7 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   }, [fromAmount, fromToken, toToken]);
 
   const handleSwap = async () => {
-    if (!publicKey) {
+    if (!publicKey || !signTransaction) {
       toast({
         title: 'Wallet Not Connected',
         description: 'Please connect your wallet to start trading',
@@ -97,37 +101,90 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
       return;
     }
 
-    // Update balances based on swap
-    let usdtDelta = 0;
-    let solDelta = 0;
+    setIsSwapping(true);
 
-    if (fromToken === 'USDT' && toToken === 'SOL') {
-      usdtDelta = -amount;
-      solDelta = parseFloat(calculatedToAmount);
-    } else if (fromToken === 'SOL' && toToken === 'USDT') {
-      usdtDelta = parseFloat(calculatedToAmount);
-      solDelta = -amount;
-    }
+    try {
+      // Create and sign transaction
+      const connection = new Connection(endpoint);
+      const transaction = new Transaction();
+      
+      // Add a dummy instruction (in production, this would be actual swap instruction)
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: publicKey,
+          lamports: 1,
+        })
+      );
 
-    const success = await updateBalance(usdtDelta, solDelta);
+      const { blockhash } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = publicKey;
 
-    if (success) {
-      setLastTrade({
-        fromToken,
-        toToken,
-        fromAmount,
-        toAmount: calculatedToAmount,
-      });
-      setShowChart(true);
+      // Sign transaction
+      const signedTransaction = await signTransaction(transaction);
+      
+      // Send transaction
+      const signature = await connection.sendRawTransaction(signedTransaction.serialize());
       
       toast({
-        title: 'Swap Successful',
-        description: `Swapped ${fromAmount} ${fromToken} for ${calculatedToAmount} ${toToken}`,
+        title: 'Transaction Signed',
+        description: 'Processing your swap...',
       });
 
-      // Reset form
-      setFromAmount('');
-      setToAmount('');
+      // Wait for confirmation
+      await connection.confirmTransaction(signature, 'confirmed');
+
+      // Update balances based on swap
+      let usdtDelta = 0;
+      let solDelta = 0;
+
+      if (fromToken === 'USDT' && toToken === 'SOL') {
+        usdtDelta = -amount;
+        solDelta = parseFloat(calculatedToAmount);
+      } else if (fromToken === 'SOL' && toToken === 'USDT') {
+        usdtDelta = parseFloat(calculatedToAmount);
+        solDelta = -amount;
+      }
+
+      const success = await updateBalance(usdtDelta, solDelta);
+
+      if (success) {
+        // Save trade to database
+        await supabase.from('trades').insert({
+          wallet_address: publicKey.toString(),
+          from_token: fromToken,
+          to_token: toToken,
+          from_amount: amount,
+          to_amount: parseFloat(calculatedToAmount),
+          transaction_signature: signature,
+        });
+
+        setLastTrade({
+          fromToken,
+          toToken,
+          fromAmount,
+          toAmount: calculatedToAmount,
+        });
+        setShowChart(true);
+        
+        toast({
+          title: 'Swap Successful',
+          description: `Swapped ${fromAmount} ${fromToken} for ${calculatedToAmount} ${toToken}`,
+        });
+
+        // Reset form
+        setFromAmount('');
+        setToAmount('');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Swap Failed',
+        description: error.message || 'Failed to complete swap',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSwapping(false);
     }
   };
 
@@ -221,9 +278,9 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
         <Button
           onClick={handleSwap}
           className="w-full bg-gradient-primary hover:opacity-90"
-          disabled={!publicKey || !balance}
+          disabled={!publicKey || !balance || isSwapping}
         >
-          {publicKey && balance ? 'Swap Tokens' : 'Connect Wallet to Swap'}
+          {isSwapping ? 'Signing Transaction...' : publicKey && balance ? 'Swap Tokens' : 'Connect Wallet to Swap'}
         </Button>
 
         {fromAmount && (

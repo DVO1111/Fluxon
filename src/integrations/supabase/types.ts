@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      trades: {
+        Row: {
+          created_at: string
+          from_amount: number
+          from_token: string
+          id: string
+          to_amount: number
+          to_token: string
+          transaction_signature: string | null
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          from_amount: number
+          from_token: string
+          id?: string
+          to_amount: number
+          to_token: string
+          transaction_signature?: string | null
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          from_amount?: number
+          from_token?: string
+          id?: string
+          to_amount?: number
+          to_token?: string
+          transaction_signature?: string | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       wallet_balances: {
         Row: {
           created_at: string
