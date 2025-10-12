@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { logError } from '@/lib/utils';
 
 export interface WalletBalance {
   usdt_balance: number;
@@ -55,7 +56,7 @@ export const useWalletBalance = () => {
       if (error) throw error;
       setBalance(data);
     } catch (error) {
-      console.error('Error fetching balance:', error);
+      logError('fetchBalance', error);
     } finally {
       setLoading(false);
     }
@@ -86,10 +87,10 @@ export const useWalletBalance = () => {
 
       return true;
     } catch (error) {
-      console.error('Error updating balance:', error);
+      logError('updateBalance', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update balance',
+        title: 'Unable to Update Balance',
+        description: 'Please try again later',
         variant: 'destructive',
       });
       return false;
