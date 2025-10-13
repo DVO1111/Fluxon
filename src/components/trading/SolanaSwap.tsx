@@ -12,22 +12,22 @@ import { Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.
 import { supabase } from '@/integrations/supabase/client';
 import { endpoint } from '@/lib/solana/config';
 
-const SOLANA_TOKENS = [
-  { symbol: 'SOL', name: 'Solana', decimals: 9 },
-  { symbol: 'USDC', name: 'USD Coin', decimals: 6 },
-  { symbol: 'USDT', name: 'Tether', decimals: 6 },
-  { symbol: 'RAY', name: 'Raydium', decimals: 6 },
-  { symbol: 'SRM', name: 'Serum', decimals: 6 },
-  { symbol: 'BONK', name: 'Bonk', decimals: 5 },
-  { symbol: 'JUP', name: 'Jupiter', decimals: 6 },
-  { symbol: 'ORCA', name: 'Orca', decimals: 6 },
-  { symbol: 'MNGO', name: 'Mango', decimals: 6 },
-  { symbol: 'STEP', name: 'Step Finance', decimals: 9 },
-  { symbol: 'COPE', name: 'Cope', decimals: 6 },
-  { symbol: 'MEDIA', name: 'Media Network', decimals: 6 },
-  { symbol: 'ROPE', name: 'Rope Token', decimals: 9 },
-  { symbol: 'MER', name: 'Mercurial', decimals: 6 },
-  { symbol: 'PORT', name: 'Port Finance', decimals: 6 },
+const DEFAULT_TOKENS = [
+  { symbol: 'SOL', name: 'Solana', decimals: 9, address: '' },
+  { symbol: 'USDC', name: 'USD Coin', decimals: 6, address: '' },
+  { symbol: 'USDT', name: 'Tether', decimals: 6, address: '' },
+  { symbol: 'RAY', name: 'Raydium', decimals: 6, address: '' },
+  { symbol: 'SRM', name: 'Serum', decimals: 6, address: '' },
+  { symbol: 'BONK', name: 'Bonk', decimals: 5, address: '' },
+  { symbol: 'JUP', name: 'Jupiter', decimals: 6, address: '' },
+  { symbol: 'ORCA', name: 'Orca', decimals: 6, address: '' },
+  { symbol: 'MNGO', name: 'Mango', decimals: 6, address: '' },
+  { symbol: 'STEP', name: 'Step Finance', decimals: 9, address: '' },
+  { symbol: 'COPE', name: 'Cope', decimals: 6, address: '' },
+  { symbol: 'MEDIA', name: 'Media Network', decimals: 6, address: '' },
+  { symbol: 'ROPE', name: 'Rope Token', decimals: 9, address: '' },
+  { symbol: 'MER', name: 'Mercurial', decimals: 6, address: '' },
+  { symbol: 'PORT', name: 'Port Finance', decimals: 6, address: '' },
 ];
 
 interface SolanaSwapProps {
@@ -41,13 +41,34 @@ interface SolanaSwapProps {
 export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const { publicKey, signTransaction } = useWallet();
   const { balance, updateBalance } = useWalletBalance();
+  const [availableTokens, setAvailableTokens] = useState(DEFAULT_TOKENS);
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
-  const [fromToken, setFromToken] = useState(preselectedToken?.symbol || 'USDT');
+  const [fromToken, setFromToken] = useState('USDT');
   const [toToken, setToToken] = useState('SOL');
   const [showChart, setShowChart] = useState(false);
   const [lastTrade, setLastTrade] = useState<any>(null);
   const [isSwapping, setIsSwapping] = useState(false);
+
+  // Add custom token to available tokens when preselectedToken changes
+  useEffect(() => {
+    if (preselectedToken) {
+      setAvailableTokens((prev) => {
+        const exists = prev.some(t => t.address === preselectedToken.address);
+        if (!exists) {
+          return [...prev, { 
+            symbol: preselectedToken.symbol, 
+            name: preselectedToken.name, 
+            decimals: 6,
+            address: preselectedToken.address 
+          }];
+        }
+        return prev;
+      });
+      setFromToken('USDT');
+      setToToken(preselectedToken.symbol);
+    }
+  }, [preselectedToken]);
 
   // Auto-calculate toAmount when fromAmount changes
   useEffect(() => {
@@ -231,7 +252,7 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
               onChange={(e) => setFromToken(e.target.value)}
               className="px-4 py-2 rounded-md bg-background border border-border text-foreground"
             >
-              {SOLANA_TOKENS.map((token) => (
+              {availableTokens.map((token) => (
                 <option key={token.symbol} value={token.symbol}>
                   {token.symbol}
                 </option>
@@ -266,7 +287,7 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
               onChange={(e) => setToToken(e.target.value)}
               className="px-4 py-2 rounded-md bg-background border border-border text-foreground"
             >
-              {SOLANA_TOKENS.map((token) => (
+              {availableTokens.map((token) => (
                 <option key={token.symbol} value={token.symbol}>
                   {token.symbol}
                 </option>
