@@ -155,8 +155,15 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
         // Generate a mock transaction signature for demo purposes
         const mockSignature = `${Date.now()}_${publicKey.toString().slice(0, 8)}_${fromToken}_${toToken}`;
 
+        // Get current user session
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session?.user) {
+          throw new Error('No authenticated user');
+        }
+
         // Save trade to database
         await supabase.from('trades').insert({
+          user_id: session.session.user.id,
           wallet_address: publicKey.toString(),
           from_token: fromToken,
           to_token: toToken,

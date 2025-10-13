@@ -24,10 +24,19 @@ export const useWalletBalance = () => {
     try {
       const walletAddress = publicKey.toString();
 
-      // Check if wallet balance exists
+      // Get current user session
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user) {
+        logError('fetchBalance', 'No authenticated user');
+        setLoading(false);
+        return;
+      }
+
+      // Check if wallet balance exists for this user
       let { data, error } = await supabase
         .from('wallet_balances')
         .select('usdt_balance, sol_balance')
+        .eq('user_id', session.session.user.id)
         .eq('wallet_address', walletAddress)
         .maybeSingle();
 
@@ -36,6 +45,7 @@ export const useWalletBalance = () => {
         const { data: newBalance, error: insertError } = await supabase
           .from('wallet_balances')
           .insert({
+            user_id: session.session.user.id,
             wallet_address: walletAddress,
             usdt_balance: 100000.00,
             sol_balance: 0.00,
@@ -67,6 +77,14 @@ export const useWalletBalance = () => {
 
     try {
       const walletAddress = publicKey.toString();
+
+      // Get current user session
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session?.user) {
+        logError('updateBalance', 'No authenticated user');
+        return false;
+      }
+
       const newUsdtBalance = balance.usdt_balance + usdtDelta;
       const newSolBalance = balance.sol_balance + solDelta;
 
@@ -76,6 +94,7 @@ export const useWalletBalance = () => {
           usdt_balance: newUsdtBalance,
           sol_balance: newSolBalance,
         })
+        .eq('user_id', session.session.user.id)
         .eq('wallet_address', walletAddress);
 
       if (error) throw error;
