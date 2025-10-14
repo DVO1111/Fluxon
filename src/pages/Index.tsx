@@ -26,10 +26,22 @@ const Index = () => {
     }
   }, [user, loading, navigate]);
 
+  const handleTokenSelect = (token: { address: string; symbol: string; name: string }) => {
+    setSelectedToken(token);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -37,10 +49,6 @@ const Index = () => {
   if (!user) {
     return null;
   }
-
-  const handleTokenSelect = (token: { address: string; symbol: string; name: string }) => {
-    setSelectedToken(token);
-  };
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -66,7 +74,7 @@ const Index = () => {
                 Trade History
               </Button>
               <Button
-                onClick={signOut}
+                onClick={handleSignOut}
                 variant="outline"
                 className="gap-2"
               >

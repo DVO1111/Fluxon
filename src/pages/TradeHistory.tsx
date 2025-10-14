@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -19,35 +20,55 @@ interface Trade {
 }
 
 export default function TradeHistory() {
-  const { user } = useAuth();
+  const { publicKey } = useWallet();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       navigate('/auth');
-    } else {
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (user) {
       fetchTrades();
     }
-  }, [user, navigate]);
+  }, [user]);
 
   const fetchTrades = async () => {
     if (!user) return;
     
     setLoading(true);
-    const result = await supabase
+    const { data, error } = await supabase
       .from('trades')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (!result.error && result.data) {
-      setTrades(result.data as Trade[]);
+    if (!error && data) {
+      setTrades(data);
     }
     setLoading(false);
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
@@ -75,11 +96,7 @@ export default function TradeHistory() {
 
       <main className="container mx-auto px-4 py-8">
         <Card className="p-6 bg-gradient-card border-primary/20">
-          {!user ? (
-            <p className="text-center text-muted-foreground">
-              Sign in to view trade history
-            </p>
-          ) : loading ? (
+          {loading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
