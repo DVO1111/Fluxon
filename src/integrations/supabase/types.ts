@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trades: {
         Row: {
           created_at: string
@@ -23,6 +41,7 @@ export type Database = {
           to_amount: number
           to_token: string
           transaction_signature: string | null
+          user_id: string | null
           wallet_address: string
         }
         Insert: {
@@ -33,6 +52,7 @@ export type Database = {
           to_amount: number
           to_token: string
           transaction_signature?: string | null
+          user_id?: string | null
           wallet_address: string
         }
         Update: {
@@ -43,6 +63,7 @@ export type Database = {
           to_amount?: number
           to_token?: string
           transaction_signature?: string | null
+          user_id?: string | null
           wallet_address?: string
         }
         Relationships: []
@@ -54,6 +75,7 @@ export type Database = {
           sol_balance: number
           updated_at: string
           usdt_balance: number
+          user_id: string | null
           wallet_address: string
         }
         Insert: {
@@ -62,6 +84,7 @@ export type Database = {
           sol_balance?: number
           updated_at?: string
           usdt_balance?: number
+          user_id?: string | null
           wallet_address: string
         }
         Update: {
@@ -70,6 +93,7 @@ export type Database = {
           sol_balance?: number
           updated_at?: string
           usdt_balance?: number
+          user_id?: string | null
           wallet_address?: string
         }
         Relationships: []

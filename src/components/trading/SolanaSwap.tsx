@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ArrowDownUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { TradeChart } from './TradeChart';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,8 +37,8 @@ interface SolanaSwapProps {
 }
 
 export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
+  const { publicKey } = useWallet();
   const { balance, updateBalance } = useWalletBalance();
-  const [userId, setUserId] = useState<string | null>(null);
   const [availableTokens, setAvailableTokens] = useState(DEFAULT_TOKENS);
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
@@ -46,12 +47,6 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const [showChart, setShowChart] = useState(false);
   const [lastTrade, setLastTrade] = useState<any>(null);
   const [isSwapping, setIsSwapping] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUserId(user?.id || null);
-    });
-  }, []);
 
   // Add custom token to available tokens when preselectedToken changes
   useEffect(() => {
@@ -85,10 +80,10 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   }, [fromAmount, fromToken, toToken]);
 
   const handleSwap = async () => {
-    if (!userId) {
+    if (!publicKey) {
       toast({
-        title: 'Not Authenticated',
-        description: 'Please sign in to start trading',
+        title: 'Wallet Not Connected',
+        description: 'Please connect your wallet to start trading',
         variant: 'destructive',
       });
       return;
@@ -158,12 +153,18 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
 
       if (success) {
         // Generate a mock transaction signature for demo purposes
-        const mockSignature = `${Date.now()}_${userId}_${fromToken}_${toToken}`;
+        const mockSignature = `${Date.now()}_${publicKey.toString().slice(0, 8)}_${fromToken}_${toToken}`;
+
+        // Get current user session
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session?.user) {
+          throw new Error('No authenticated user');
+        }
 
         // Save trade to database
         await supabase.from('trades').insert({
-          user_id: userId,
-          wallet_address: userId,
+          user_id: session.session.user.id,
+          wallet_address: publicKey.toString(),
           from_token: fromToken,
           to_token: toToken,
           from_amount: amount,
@@ -289,9 +290,9 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
         <Button
           onClick={handleSwap}
           className="w-full bg-gradient-primary hover:opacity-90"
-          disabled={!userId || !balance || isSwapping}
+          disabled={!publicKey || !balance || isSwapping}
         >
-          {isSwapping ? 'Processing...' : userId && balance ? 'Swap Tokens' : 'Sign in to Swap'}
+          {isSwapping ? 'Signing Transaction...' : publicKey && balance ? 'Swap Tokens' : 'Connect Wallet to Swap'}
         </Button>
 
         {fromAmount && (
