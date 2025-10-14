@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WalletConnect } from '@/components/solana/WalletConnect';
 import { PriceChart } from '@/components/trading/PriceChart';
@@ -7,48 +7,20 @@ import { SolanaPortfolio } from '@/components/trading/SolanaPortfolio';
 import { TokenLookup } from '@/components/trading/TokenLookup';
 import { WalletBalance } from '@/components/solana/WalletBalance';
 import { Button } from '@/components/ui/button';
-import { History, LogOut } from 'lucide-react';
+import { History } from 'lucide-react';
 import fluxonLogo from '@/assets/fluxon-logo.png';
-import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, loading, signOut } = useAuth();
   const [selectedToken, setSelectedToken] = useState<{
     address: string;
     symbol: string;
     name: string;
   } | undefined>(undefined);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
-
   const handleTokenSelect = (token: { address: string; symbol: string; name: string }) => {
     setSelectedToken(token);
   };
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -64,24 +36,14 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Solana Trading Platform</p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={() => navigate('/history')}
-                variant="outline"
-                className="gap-2"
-              >
-                <History className="w-4 h-4" />
-                Trade History
-              </Button>
-              <Button
-                onClick={handleSignOut}
-                variant="outline"
-                className="gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </Button>
-            </div>
+            <Button
+              onClick={() => navigate('/history')}
+              variant="outline"
+              className="gap-2"
+            >
+              <History className="w-4 h-4" />
+              Trade History
+            </Button>
           </div>
         </div>
       </header>
