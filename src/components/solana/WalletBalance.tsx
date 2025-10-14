@@ -1,29 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { Wallet } from 'lucide-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 export const WalletBalance = () => {
   const { balance, loading } = useWalletBalance();
-  const { connected } = useWallet();
-
-  if (!connected) {
-    return (
-      <Card className="p-6 bg-gradient-card border-primary/20">
-        <div className="text-center space-y-4">
-          <Wallet className="w-12 h-12 mx-auto text-muted-foreground" />
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Connect Your Wallet</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Connect your Solana wallet to receive 100,000 USDT and start trading
-            </p>
-            <WalletMultiButton className="!bg-gradient-primary hover:!opacity-90" />
-          </div>
-        </div>
-      </Card>
-    );
-  }
 
   if (loading || !balance) {
     return (

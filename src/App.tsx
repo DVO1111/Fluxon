@@ -7,6 +7,7 @@ import { WalletProvider } from "./components/solana/WalletProvider";
 import Index from "./pages/Index";
 import TradeHistory from "./pages/TradeHistory";
 import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/history" element={<TradeHistory />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

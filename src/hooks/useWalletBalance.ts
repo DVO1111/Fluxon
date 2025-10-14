@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { logError } from '@/lib/utils';
@@ -10,48 +9,27 @@ export interface WalletBalance {
 }
 
 export const useWalletBalance = () => {
-  const { publicKey, connected } = useWallet();
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const fetchBalance = async () => {
-    if (!publicKey || !connected) {
-      setBalance(null);
-      setLoading(false);
-      return;
-    }
-
     try {
-      const walletAddress = publicKey.toString();
-
-      // Check if wallet balance exists
-      let { data, error } = await supabase
-        .from('wallet_balances')
-        .select('usdt_balance, sol_balance')
-        .eq('wallet_address', walletAddress)
-        .maybeSingle();
-
-      // If wallet doesn't exist, create it with 100k USDT
-      if (!data && !error) {
-        const { data: newBalance, error: insertError } = await supabase
-          .from('wallet_balances')
-          .insert({
-            wallet_address: walletAddress,
-            usdt_balance: 100000.00,
-            sol_balance: 0.00,
-          })
-          .select('usdt_balance, sol_balance')
-          .single();
-
-        if (insertError) throw insertError;
-        
-        setBalance(newBalance);
-        toast({
-          title: 'Welcome to Fluxon!',
-          description: 'You received 100,000 USDT demo balance',
-        });
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setBalance(null);
+        setLoading(false);
         return;
       }
+
+      setUserId(user.id);
+
+      const { data, error } = await supabase
+        .from('wallet_balances')
+        .select('usdt_balance, sol_balance')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (error) throw error;
       setBalance(data);
@@ -62,23 +40,22 @@ export const useWalletBalance = () => {
     }
   };
 
-  const updateBalance = async (usdtDelta: number, solDelta: number) => {
-    if (!publicKey || !connected || !balance) return false;
+  const updateBalance = async (usdtDelta: number, solDelta: number): Promise<boolean> => {
+    if (!userId || !balance) return false;
 
     try {
-      const walletAddress = publicKey.toString();
       const newUsdtBalance = balance.usdt_balance + usdtDelta;
       const newSolBalance = balance.sol_balance + solDelta;
 
-      const { error } = await supabase
+      const result = await supabase
         .from('wallet_balances')
         .update({
           usdt_balance: newUsdtBalance,
           sol_balance: newSolBalance,
         })
-        .eq('wallet_address', walletAddress);
+        .eq('user_id', userId);
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
       setBalance({
         usdt_balance: newUsdtBalance,
@@ -99,7 +76,7 @@ export const useWalletBalance = () => {
 
   useEffect(() => {
     fetchBalance();
-  }, [publicKey, connected]);
+  }, []);
 
   return { balance, loading, updateBalance, refreshBalance: fetchBalance };
 };
