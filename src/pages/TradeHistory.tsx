@@ -7,7 +7,6 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/useAuth';
 
 interface Trade {
   id: string;
@@ -21,31 +20,24 @@ interface Trade {
 
 export default function TradeHistory() {
   const { publicKey } = useWallet();
-  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (user) {
+    if (publicKey) {
       fetchTrades();
     }
-  }, [user]);
+  }, [publicKey]);
 
   const fetchTrades = async () => {
-    if (!user) return;
+    if (!publicKey) return;
     
     setLoading(true);
     const { data, error } = await supabase
       .from('trades')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('wallet_address', publicKey.toString())
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -54,21 +46,6 @@ export default function TradeHistory() {
     }
     setLoading(false);
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
@@ -96,7 +73,11 @@ export default function TradeHistory() {
 
       <main className="container mx-auto px-4 py-8">
         <Card className="p-6 bg-gradient-card border-primary/20">
-          {loading ? (
+          {!publicKey ? (
+            <p className="text-center text-muted-foreground">
+              Connect your wallet to view trade history
+            </p>
+          ) : loading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
