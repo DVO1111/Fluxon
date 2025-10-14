@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Trade {
   id: string;
@@ -19,30 +19,32 @@ interface Trade {
 }
 
 export default function TradeHistory() {
-  const { publicKey } = useWallet();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (publicKey) {
+    if (!user) {
+      navigate('/auth');
+    } else {
       fetchTrades();
     }
-  }, [publicKey]);
+  }, [user, navigate]);
 
   const fetchTrades = async () => {
-    if (!publicKey) return;
+    if (!user) return;
     
     setLoading(true);
-    const { data, error } = await supabase
+    const result = await supabase
       .from('trades')
       .select('*')
-      .eq('wallet_address', publicKey.toString())
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (!error && data) {
-      setTrades(data);
+    if (!result.error && result.data) {
+      setTrades(result.data as Trade[]);
     }
     setLoading(false);
   };
@@ -73,9 +75,9 @@ export default function TradeHistory() {
 
       <main className="container mx-auto px-4 py-8">
         <Card className="p-6 bg-gradient-card border-primary/20">
-          {!publicKey ? (
+          {!user ? (
             <p className="text-center text-muted-foreground">
-              Connect your wallet to view trade history
+              Sign in to view trade history
             </p>
           ) : loading ? (
             <div className="space-y-2">
