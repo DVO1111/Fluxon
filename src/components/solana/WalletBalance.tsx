@@ -1,36 +1,37 @@
-import { FC, ReactNode, useMemo } from 'react';
-import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { clusterApiUrl } from '@solana/web3.js';
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useEffect, useState } from "react";
 
-// Import wallet adapter CSS
-import '@solana/wallet-adapter-react-ui/styles.css';
+export const WalletBalance = () => {
+  const { publicKey, connected } = useWallet();
+  const [balance, setBalance] = useState({ usdt: 0, sol: 0 });
+  const [loading, setLoading] = useState(false);
 
-interface WalletProviderProps {
-  children: ReactNode;
-}
+  useEffect(() => {
+    if (!connected || !publicKey) {
+      setBalance({ usdt: 0, sol: 0 });
+      return;
+    }
 
-export const WalletProvider: FC<WalletProviderProps> = ({ children }) => {
-  // Use mainnet for production or devnet for testing
-  const network = WalletAdapterNetwork.Mainnet;
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+    // Demo balance (mock data)
+    setLoading(true);
+    setTimeout(() => {
+      setBalance({
+        usdt: 100000.0,
+        sol: 10.0,
+      });
+      setLoading(false);
+    }, 800);
+  }, [publicKey, connected]);
 
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter(),
-    ],
-    []
-  );
+  if (!connected) return <p>Connect your wallet to view balances.</p>;
+
+  if (loading) return <p>Loading balances...</p>;
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <SolanaWalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>
-          {children}
-        </WalletModalProvider>
-      </SolanaWalletProvider>
-    </ConnectionProvider>
+    <div className="bg-black/30 p-4 rounded-lg text-white">
+      <h3 className="font-semibold mb-2">Demo Balances</h3>
+      <p>💵 USDT: {balance.usdt.toLocaleString()} USDT</p>
+      <p>⚡ SOL: {balance.sol} SOL</p>
+    </div>
   );
 };

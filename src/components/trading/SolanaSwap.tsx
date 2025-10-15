@@ -34,6 +34,7 @@ interface SolanaSwapProps {
     symbol: string;
     name: string;
   };
+  onSwap?: (amount: number) => void;
 }
 
 export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
