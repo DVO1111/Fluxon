@@ -49,7 +49,10 @@ export const useWalletBalance = () => {
 
         if (insertError) throw insertError;
         
-        setBalance(newBalance);
+        setBalance({
+          usdt_balance: Number((newBalance as any).usdt_balance),
+          sol_balance: Number((newBalance as any).sol_balance),
+        });
         toast({
           title: 'Welcome to Fluxon! ⚡️',
           description: 'You received 100,000 USDT demo balance',
@@ -58,7 +61,10 @@ export const useWalletBalance = () => {
       }
 
       if (error) throw error;
-      setBalance(data);
+      setBalance({
+        usdt_balance: Number((data as any).usdt_balance),
+        sol_balance: Number((data as any).sol_balance),
+      });
     } catch (error) {
       logError('fetchBalance', error);
     } finally {
