@@ -47,7 +47,7 @@ export const useWalletBalance = () => {
         
         setBalance(newBalance);
         toast({
-          title: 'Welcome to Fluxon!',
+          title: 'Welcome to Fluxon! ⚡️',
           description: 'You received 100,000 USDT demo balance',
         });
         return;
