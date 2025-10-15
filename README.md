@@ -54,7 +54,7 @@ It’s a playground for **traders, learners, and degens** to test strategies wit
 
 ## 🪩 Join the Flux Fam
 
-- 🐦 **X (Twitter):** [@FluxonDegen](#)
+- 🐦 **X (Twitter):** [@Fluxonng](#)
 - 💬 **Discord:** [Join the community](#)
 - 🌐 **Website:** [fluxonng.vercel.app](https://fluxonng.vercel.app)
 
