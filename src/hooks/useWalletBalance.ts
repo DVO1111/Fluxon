@@ -15,6 +15,8 @@ export const useWalletBalance = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchBalance = async () => {
+    // Reset loading for each fetch attempt
+    setLoading(true);
     if (!publicKey || !connected) {
       setBalance(null);
       setLoading(false);
@@ -24,11 +26,13 @@ export const useWalletBalance = () => {
     try {
       const walletAddress = publicKey.toString();
 
-      // Check if wallet balance exists
-      let { data, error } = await supabase
+      // Try to get the most recent record (avoids errors if duplicates exist)
+      const { data, error } = await supabase
         .from('wallet_balances')
         .select('usdt_balance, sol_balance')
         .eq('wallet_address', walletAddress)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       // If wallet doesn't exist, create it with 100k USDT
