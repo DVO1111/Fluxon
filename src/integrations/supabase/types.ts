@@ -14,6 +14,259 @@ export type Database = {
   }
   public: {
     Tables: {
+      competition_bets: {
+        Row: {
+          amount: number
+          bettor_id: string
+          competition_id: string
+          created_at: string
+          id: string
+          potential_payout: number
+          status: string
+          target_user_id: string
+        }
+        Insert: {
+          amount: number
+          bettor_id: string
+          competition_id: string
+          created_at?: string
+          id?: string
+          potential_payout: number
+          status?: string
+          target_user_id: string
+        }
+        Update: {
+          amount?: number
+          bettor_id?: string
+          competition_id?: string
+          created_at?: string
+          id?: string
+          potential_payout?: number
+          status?: string
+          target_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_bets_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_chat: {
+        Row: {
+          competition_id: string
+          created_at: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_chat_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_participants: {
+        Row: {
+          competition_id: string
+          current_portfolio_value: number
+          id: string
+          joined_at: string
+          rank: number | null
+          user_id: string
+          virtual_balance: number
+        }
+        Insert: {
+          competition_id: string
+          current_portfolio_value?: number
+          id?: string
+          joined_at?: string
+          rank?: number | null
+          user_id: string
+          virtual_balance: number
+        }
+        Update: {
+          competition_id?: string
+          current_portfolio_value?: number
+          id?: string
+          joined_at?: string
+          rank?: number | null
+          user_id?: string
+          virtual_balance?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_participants_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competition_trades: {
+        Row: {
+          competition_id: string
+          created_at: string
+          from_amount: number
+          from_token: string
+          id: string
+          price: number
+          to_amount: number
+          to_token: string
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          from_amount: number
+          from_token: string
+          id?: string
+          price: number
+          to_amount: number
+          to_token: string
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          from_amount?: number
+          from_token?: string
+          id?: string
+          price?: number
+          to_amount?: number
+          to_token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competition_trades_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      competitions: {
+        Row: {
+          created_at: string
+          description: string | null
+          end_time: string
+          entry_fee: number
+          id: string
+          max_participants: number | null
+          name: string
+          start_time: string
+          status: Database["public"]["Enums"]["competition_status"]
+          updated_at: string
+          virtual_balance: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          end_time: string
+          entry_fee?: number
+          id?: string
+          max_participants?: number | null
+          name: string
+          start_time: string
+          status?: Database["public"]["Enums"]["competition_status"]
+          updated_at?: string
+          virtual_balance?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          entry_fee?: number
+          id?: string
+          max_participants?: number | null
+          name?: string
+          start_time?: string
+          status?: Database["public"]["Enums"]["competition_status"]
+          updated_at?: string
+          virtual_balance?: number
+        }
+        Relationships: []
+      }
+      nft_rewards: {
+        Row: {
+          competition_id: string
+          created_at: string
+          id: string
+          minted: boolean
+          rank: number
+          token_uri: string | null
+          user_id: string
+        }
+        Insert: {
+          competition_id: string
+          created_at?: string
+          id?: string
+          minted?: boolean
+          rank: number
+          token_uri?: string | null
+          user_id: string
+        }
+        Update: {
+          competition_id?: string
+          created_at?: string
+          id?: string
+          minted?: boolean
+          rank?: number
+          token_uri?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nft_rewards_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       trades: {
         Row: {
           created_at: string
@@ -23,6 +276,7 @@ export type Database = {
           to_amount: number
           to_token: string
           transaction_signature: string | null
+          user_id: string | null
           wallet_address: string
         }
         Insert: {
@@ -33,6 +287,7 @@ export type Database = {
           to_amount: number
           to_token: string
           transaction_signature?: string | null
+          user_id?: string | null
           wallet_address: string
         }
         Update: {
@@ -43,6 +298,7 @@ export type Database = {
           to_amount?: number
           to_token?: string
           transaction_signature?: string | null
+          user_id?: string | null
           wallet_address?: string
         }
         Relationships: []
@@ -54,6 +310,7 @@ export type Database = {
           sol_balance: number
           updated_at: string
           usdt_balance: number
+          user_id: string | null
           wallet_address: string
         }
         Insert: {
@@ -62,6 +319,7 @@ export type Database = {
           sol_balance?: number
           updated_at?: string
           usdt_balance?: number
+          user_id?: string | null
           wallet_address: string
         }
         Update: {
@@ -70,6 +328,7 @@ export type Database = {
           sol_balance?: number
           updated_at?: string
           usdt_balance?: number
+          user_id?: string | null
           wallet_address?: string
         }
         Relationships: []
@@ -82,7 +341,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      competition_status: "upcoming" | "active" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -209,6 +468,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      competition_status: ["upcoming", "active", "completed"],
+    },
   },
 } as const

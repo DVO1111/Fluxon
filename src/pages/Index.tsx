@@ -6,7 +6,7 @@ import { SolanaPortfolio } from '@/components/trading/SolanaPortfolio';
 import { TokenLookup } from '@/components/trading/TokenLookup';
 import { WalletBalance } from '@/components/solana/WalletBalance';
 import { Button } from '@/components/ui/button';
-import { History } from 'lucide-react';
+import { History, Trophy } from 'lucide-react';
 import WalletButton from "@/components/solana/WalletButton";
 import fluxonLogo from '@/assets/fluxon-logo.png';
 
@@ -48,9 +48,17 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Actions (Wallet + Trade History) */}
+            {/* Actions (Wallet + Trade History + Competitions) */}
             <div className="flex items-center gap-3">
               <WalletButton />
+              <Button
+                onClick={() => navigate('/competitions')}
+                variant="outline"
+                className="gap-2"
+              >
+                <Trophy className="w-4 h-4" />
+                Competitions
+              </Button>
               <Button
                 onClick={() => navigate('/history')}
                 variant="outline"

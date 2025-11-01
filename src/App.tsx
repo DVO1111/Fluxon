@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WalletProvider } from "./components/solana/WalletProvider";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import TradeHistory from "./pages/TradeHistory";
+import Competitions from "./pages/Competitions";
+import CompetitionDetail from "./pages/CompetitionDetail";
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 const queryClient = new QueryClient();
@@ -19,6 +22,9 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/history" element={<TradeHistory />} />
+            <Route path="/competitions" element={<Competitions />} />
+            <Route path="/competition/:id" element={<CompetitionDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
