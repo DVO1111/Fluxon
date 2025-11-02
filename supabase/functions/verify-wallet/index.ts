@@ -48,24 +48,38 @@ serve(async (req) => {
     
     console.log('Signature verified successfully')
     
-    // Create a custom JWT token with wallet_address claim
+    // Create Supabase client with service role
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
     
-    // Generate a session token (simplified - in production use proper JWT)
+    // Generate session token
     const sessionToken = crypto.randomUUID()
     
-    // Store verified session in a sessions table (you'd need to create this)
-    // For now, return success with wallet address
+    // Store verified session in database
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+    
+    await supabase
+      .from('verified_wallet_sessions')
+      .upsert({
+        wallet_address: publicKey,
+        session_token: sessionToken,
+        verified_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString()
+      }, {
+        onConflict: 'wallet_address'
+      })
+    
+    console.log('Session stored successfully')
     
     return new Response(
       JSON.stringify({ 
         success: true, 
         wallet_address: publicKey,
         session_token: sessionToken,
-        verified: true
+        verified: true,
+        expires_at: expiresAt.toISOString()
       }), 
       { 
         status: 200, 
@@ -75,7 +89,7 @@ serve(async (req) => {
     
   } catch (error) {
     console.error('Error verifying wallet:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
     return new Response(
       JSON.stringify({ error: errorMessage }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
