@@ -39,7 +39,7 @@ interface SolanaSwapProps {
 
 export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const { publicKey } = useWallet();
-  const { balance, updateBalance } = useWalletBalance();
+  const { balance, updateBalance, loading } = useWalletBalance();
   const [availableTokens, setAvailableTokens] = useState(DEFAULT_TOKENS);
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
@@ -284,9 +284,9 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
         <Button
           onClick={handleSwap}
           className="w-full bg-gradient-primary hover:opacity-90"
-          disabled={!publicKey || !balance || isSwapping}
+          disabled={!publicKey || loading || !balance || isSwapping}
         >
-          {isSwapping ? 'Signing Transaction...' : publicKey && balance ? 'Swap Tokens' : 'Connect Wallet to Swap'}
+          {isSwapping ? 'Signing Transaction...' : !publicKey ? 'Connect Wallet to Swap' : loading ? 'Loading Balance...' : 'Swap Tokens'}
         </Button>
 
         {fromAmount && (
