@@ -3,6 +3,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { logError } from '@/lib/utils';
+import nacl from 'tweetnacl';
+import bs58 from 'bs58';
 
 export interface WalletBalance {
   usdt_balance: number;
@@ -10,17 +12,70 @@ export interface WalletBalance {
 }
 
 export const useWalletBalance = () => {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signMessage } = useWallet();
   const [balance, setBalance] = useState<WalletBalance | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verified, setVerified] = useState(false);
+
+  const verifyWallet = async () => {
+    if (!publicKey || !signMessage) {
+      return false;
+    }
+
+    try {
+      // Create authentication message
+      const nonce = crypto.randomUUID();
+      const timestamp = Date.now();
+      const message = `Authenticate to Fluxon\nWallet: ${publicKey.toString()}\nNonce: ${nonce}\nTimestamp: ${timestamp}`;
+      
+      // Sign message
+      const encodedMessage = new TextEncoder().encode(message);
+      const signature = await signMessage(encodedMessage);
+      
+      // Verify with edge function
+      const { data, error } = await supabase.functions.invoke('verify-wallet', {
+        body: { 
+          publicKey: publicKey.toString(), 
+          signature: btoa(String.fromCharCode(...signature)),
+          message 
+        }
+      });
+
+      if (error || !data?.verified) {
+        console.error('Wallet verification failed:', error);
+        return false;
+      }
+
+      setVerified(true);
+      return true;
+    } catch (error) {
+      console.error('Error verifying wallet:', error);
+      toast({
+        title: 'Verification Failed',
+        description: 'Please sign the message to verify wallet ownership',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
 
   const fetchBalance = async () => {
     // Reset loading for each fetch attempt
     setLoading(true);
     if (!publicKey || !connected) {
       setBalance(null);
+      setVerified(false);
       setLoading(false);
       return;
+    }
+
+    // Verify wallet ownership before fetching balance
+    if (!verified) {
+      const isVerified = await verifyWallet();
+      if (!isVerified) {
+        setLoading(false);
+        return;
+      }
     }
 
     try {

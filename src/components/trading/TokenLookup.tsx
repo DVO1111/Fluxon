@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Search, ExternalLink, TrendingUp, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PublicKey } from '@solana/web3.js';
+import { z } from 'zod';
 
 interface TokenLookupProps {
   onTokenSelect?: (token: { address: string; symbol: string; name: string }) => void;
@@ -22,7 +24,10 @@ export const TokenLookup = ({ onTokenSelect }: TokenLookupProps) => {
   } | null>(null);
 
   const handleLookup = async () => {
-    if (!contractAddress.trim()) {
+    // Trim input
+    const trimmedAddress = contractAddress.trim();
+    
+    if (!trimmedAddress) {
       toast({
         title: 'Invalid Input',
         description: 'Please enter a contract address',
@@ -31,12 +36,43 @@ export const TokenLookup = ({ onTokenSelect }: TokenLookupProps) => {
       return;
     }
 
+    // Validate Solana address format
+    const contractAddressSchema = z.string()
+      .min(32, 'Address too short')
+      .max(44, 'Address too long')
+      .regex(/^[1-9A-HJ-NP-Za-km-z]+$/, 'Invalid Solana address format');
+
+    const validation = contractAddressSchema.safeParse(trimmedAddress);
+    if (!validation.success) {
+      toast({
+        title: 'Invalid Address Format',
+        description: validation.error.errors[0].message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Additional validation using Solana SDK
+    try {
+      new PublicKey(trimmedAddress);
+    } catch (e) {
+      toast({
+        title: 'Invalid Solana Address',
+        description: 'Not a valid Solana public key',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Encode address for URL safety
+      const encodedAddress = encodeURIComponent(trimmedAddress);
+      
       // Fetch real token data from DexScreener
       const response = await fetch(
-        `https://api.dexscreener.com/latest/dex/tokens/${contractAddress}`
+        `https://api.dexscreener.com/latest/dex/tokens/${encodedAddress}`
       );
 
       if (!response.ok) {
