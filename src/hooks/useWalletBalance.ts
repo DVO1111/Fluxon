@@ -53,6 +53,7 @@ export const useWalletBalance = () => {
           usdt_balance: Number((newBalance as any).usdt_balance),
           sol_balance: Number((newBalance as any).sol_balance),
         });
+        setLoading(false);
         toast({
           title: 'Welcome to Fluxon! ⚡️',
           description: 'You received 100,000 USDT demo balance',
