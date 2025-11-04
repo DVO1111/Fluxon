@@ -133,6 +133,20 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
     setIsSwapping(true);
 
     try {
+      // Check if this is a supported swap pair (USDT/SOL only for balance tracking)
+      const isUsdtToSol = fromToken === 'USDT' && toToken === 'SOL';
+      const isSolToUsdt = fromToken === 'SOL' && toToken === 'USDT';
+      
+      if (!isUsdtToSol && !isSolToUsdt) {
+        toast({
+          title: 'Unsupported Swap',
+          description: 'Currently only USDT ↔ SOL swaps are supported',
+          variant: 'destructive',
+        });
+        setIsSwapping(false);
+        return;
+      }
+
       toast({
         title: 'Processing Swap',
         description: 'Updating your balances...',
@@ -142,10 +156,10 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
       let usdtDelta = 0;
       let solDelta = 0;
 
-      if (fromToken === 'USDT' && toToken === 'SOL') {
+      if (isUsdtToSol) {
         usdtDelta = -amount;
         solDelta = calculatedToAmount;
-      } else if (fromToken === 'SOL' && toToken === 'USDT') {
+      } else if (isSolToUsdt) {
         usdtDelta = calculatedToAmount;
         solDelta = -amount;
       }
