@@ -49,6 +49,17 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const [lastTrade, setLastTrade] = useState<any>(null);
   const [isSwapping, setIsSwapping] = useState(false);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('SolanaSwap State:', {
+      publicKey: publicKey?.toString(),
+      loading,
+      balance,
+      isSwapping,
+      buttonDisabled: !publicKey || loading || !balance || isSwapping
+    });
+  }, [publicKey, loading, balance, isSwapping]);
+
   // Add custom token to available tokens when preselectedToken changes
   useEffect(() => {
     if (preselectedToken) {
@@ -295,12 +306,25 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
           </div>
         </div>
 
+        {balance && (
+          <div className="text-sm text-muted-foreground mb-2 p-2 bg-background/50 rounded">
+            <div className="flex justify-between">
+              <span>USDT Balance:</span>
+              <span className="font-semibold">{balance.usdt_balance.toFixed(2)} USDT</span>
+            </div>
+            <div className="flex justify-between">
+              <span>SOL Balance:</span>
+              <span className="font-semibold">{balance.sol_balance.toFixed(6)} SOL</span>
+            </div>
+          </div>
+        )}
+
         <Button
           onClick={handleSwap}
           className="w-full bg-gradient-primary hover:opacity-90"
           disabled={!publicKey || loading || !balance || isSwapping}
         >
-          {isSwapping ? 'Signing Transaction...' : !publicKey ? 'Connect Wallet to Swap' : loading ? 'Loading Balance...' : 'Swap Tokens'}
+          {isSwapping ? 'Signing Transaction...' : !publicKey ? 'Connect Wallet to Swap' : loading ? 'Loading Balance...' : !balance ? 'Loading Balance...' : 'Swap Tokens'}
         </Button>
 
         {fromAmount && (
