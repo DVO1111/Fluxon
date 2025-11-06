@@ -67,7 +67,13 @@ export const useWalletBalance = () => {
         sol_balance: Number((data as any).sol_balance),
       });
     } catch (error) {
+      console.error('fetchBalance error:', error);
       logError('fetchBalance', error);
+      toast({
+        title: 'Error Loading Balance',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
