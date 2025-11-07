@@ -3,13 +3,12 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { ArrowDownUp, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowDownUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { TradeChart } from './TradeChart';
 import { supabase } from '@/integrations/supabase/client';
-import { useTokenPrices } from '@/hooks/useCryptoPrices';
 
 const DEFAULT_TOKENS = [
   { symbol: 'SOL', name: 'Solana', decimals: 9, address: '' },
@@ -41,7 +40,6 @@ interface SolanaSwapProps {
 export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const { publicKey } = useWallet();
   const { balance, updateBalance, loading } = useWalletBalance();
-  const { data: tokenPrices, isLoading: pricesLoading } = useTokenPrices();
   const [availableTokens, setAvailableTokens] = useState(DEFAULT_TOKENS);
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
@@ -50,7 +48,6 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const [showChart, setShowChart] = useState(false);
   const [lastTrade, setLastTrade] = useState<any>(null);
   const [isSwapping, setIsSwapping] = useState(false);
-  const [exchangeRate, setExchangeRate] = useState<number>(0);
 
   // Debug logging
   useEffect(() => {
@@ -83,28 +80,16 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
     }
   }, [preselectedToken]);
 
-  // Calculate exchange rate based on real prices
-  useEffect(() => {
-    if (tokenPrices && fromToken && toToken) {
-      const fromPrice = tokenPrices[fromToken] || 0;
-      const toPrice = tokenPrices[toToken] || 0;
-      
-      if (fromPrice > 0 && toPrice > 0) {
-        const rate = fromPrice / toPrice;
-        setExchangeRate(rate);
-      }
-    }
-  }, [tokenPrices, fromToken, toToken]);
-
   // Auto-calculate toAmount when fromAmount changes
   useEffect(() => {
-    if (fromAmount && parseFloat(fromAmount) > 0 && exchangeRate > 0) {
-      const calculated = (parseFloat(fromAmount) * exchangeRate).toFixed(6);
+    if (fromAmount && parseFloat(fromAmount) > 0) {
+      const rate = fromToken === 'USDT' ? 1 / 150 : 150;
+      const calculated = (parseFloat(fromAmount) * rate).toFixed(6);
       setToAmount(calculated);
     } else {
       setToAmount('');
     }
-  }, [fromAmount, exchangeRate]);
+  }, [fromAmount, fromToken, toToken]);
 
   const handleSwap = async () => {
     if (!publicKey) {
@@ -337,41 +322,16 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
           {isSwapping ? 'Signing Transaction...' : !publicKey ? 'Connect Wallet to Swap' : loading ? 'Loading Balance...' : !balance ? 'Loading Balance...' : 'Swap Tokens'}
         </Button>
 
-        {fromAmount && tokenPrices && (
-          <div className="text-sm text-muted-foreground space-y-2">
-            <div className="p-3 bg-background/50 rounded-lg space-y-2">
-              <div className="flex justify-between items-center">
-                <span>Exchange Rate:</span>
-                <span className="font-semibold">
-                  1 {fromToken} ≈ {exchangeRate.toFixed(6)} {toToken}
-                </span>
-              </div>
-              
-              {tokenPrices[fromToken] && (
-                <div className="flex justify-between items-center text-xs">
-                  <span>{fromToken} Price:</span>
-                  <span className="font-medium">${tokenPrices[fromToken].toFixed(2)}</span>
-                </div>
-              )}
-              
-              {tokenPrices[toToken] && (
-                <div className="flex justify-between items-center text-xs">
-                  <span>{toToken} Price:</span>
-                  <span className="font-medium">${tokenPrices[toToken].toFixed(2)}</span>
-                </div>
-              )}
+        {fromAmount && (
+          <div className="text-sm text-muted-foreground space-y-1">
+            <div className="flex justify-between">
+              <span>Exchange Rate:</span>
+              <span>1 {fromToken} ≈ 150 {toToken}</span>
             </div>
-            
             <div className="flex justify-between">
               <span>Network Fee:</span>
               <span>~0.000005 SOL</span>
             </div>
-          </div>
-        )}
-        
-        {pricesLoading && (
-          <div className="text-xs text-muted-foreground text-center">
-            Loading live prices...
           </div>
         )}
       </div>
