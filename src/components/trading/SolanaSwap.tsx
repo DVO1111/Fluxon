@@ -147,35 +147,30 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
       // Check if this is a supported swap pair (USDT/SOL only for balance tracking)
       const isUsdtToSol = fromToken === 'USDT' && toToken === 'SOL';
       const isSolToUsdt = fromToken === 'SOL' && toToken === 'USDT';
-      
-      if (!isUsdtToSol && !isSolToUsdt) {
-        toast({
-          title: 'Unsupported Swap',
-          description: 'Currently only USDT ↔ SOL swaps are supported',
-          variant: 'destructive',
-        });
-        setIsSwapping(false);
-        return;
-      }
+      const isBalanceTracked = isUsdtToSol || isSolToUsdt;
 
       toast({
         title: 'Processing Swap',
         description: 'Updating your balances...',
       });
 
-      // Update balances based on swap
-      let usdtDelta = 0;
-      let solDelta = 0;
+      // Update balances based on swap (only for USDT/SOL pairs)
+      let success = true;
+      
+      if (isBalanceTracked) {
+        let usdtDelta = 0;
+        let solDelta = 0;
 
-      if (isUsdtToSol) {
-        usdtDelta = -amount;
-        solDelta = calculatedToAmount;
-      } else if (isSolToUsdt) {
-        usdtDelta = calculatedToAmount;
-        solDelta = -amount;
+        if (isUsdtToSol) {
+          usdtDelta = -amount;
+          solDelta = calculatedToAmount;
+        } else if (isSolToUsdt) {
+          usdtDelta = calculatedToAmount;
+          solDelta = -amount;
+        }
+
+        success = await updateBalance(usdtDelta, solDelta);
       }
-
-      const success = await updateBalance(usdtDelta, solDelta);
 
       if (success) {
         // Generate a mock transaction signature for demo purposes
