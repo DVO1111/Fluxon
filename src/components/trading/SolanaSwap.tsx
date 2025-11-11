@@ -9,6 +9,8 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { TradeChart } from './TradeChart';
 import { supabase } from '@/integrations/supabase/client';
+import { useCryptoPrices } from '@/hooks/useCryptoPrices';
+import { TokenSelect } from './TokenSelect';
 
 const DEFAULT_TOKENS = [
   { symbol: 'SOL', name: 'Solana', decimals: 9, address: '' },
@@ -40,6 +42,7 @@ interface SolanaSwapProps {
 export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
   const { publicKey } = useWallet();
   const { balance, updateBalance, loading } = useWalletBalance();
+  const { data: cryptoPrices, isLoading: pricesLoading } = useCryptoPrices();
   const [availableTokens, setAvailableTokens] = useState(DEFAULT_TOKENS);
   const [fromAmount, setFromAmount] = useState('');
   const [toAmount, setToAmount] = useState('');
@@ -252,17 +255,13 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
               onChange={(e) => setFromAmount(e.target.value)}
               className="flex-1 bg-background border-border"
             />
-            <select
+            <TokenSelect
+              tokens={availableTokens}
               value={fromToken}
-              onChange={(e) => setFromToken(e.target.value)}
-              className="px-4 py-2 rounded-md bg-background border border-border text-foreground"
-            >
-              {availableTokens.map((token) => (
-                <option key={token.symbol} value={token.symbol}>
-                  {token.symbol}
-                </option>
-              ))}
-            </select>
+              onChange={setFromToken}
+              prices={cryptoPrices}
+              loading={pricesLoading}
+            />
           </div>
         </div>
 
@@ -287,17 +286,13 @@ export const SolanaSwap = ({ preselectedToken }: SolanaSwapProps) => {
               onChange={(e) => setToAmount(e.target.value)}
               className="flex-1 bg-background border-border"
             />
-            <select
+            <TokenSelect
+              tokens={availableTokens}
               value={toToken}
-              onChange={(e) => setToToken(e.target.value)}
-              className="px-4 py-2 rounded-md bg-background border border-border text-foreground"
-            >
-              {availableTokens.map((token) => (
-                <option key={token.symbol} value={token.symbol}>
-                  {token.symbol}
-                </option>
-              ))}
-            </select>
+              onChange={setToToken}
+              prices={cryptoPrices}
+              loading={pricesLoading}
+            />
           </div>
         </div>
 
